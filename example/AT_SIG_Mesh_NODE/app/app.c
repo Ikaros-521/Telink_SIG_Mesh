@@ -47,6 +47,8 @@
 #include "proj_lib/ble/l2cap.h"
 #include "mesh/blt_soft_timer.h"
 #include "proj/drivers/rf_pa.h"
+#include "tinyFlash.h"
+#include "tinyFlash_Index.h"
 
 #if MI_API_ENABLE
 #include "mesh/mi_api/telink_sdk_mible_api.h"
@@ -58,7 +60,11 @@
 
 MYFIFO_INIT(blt_rxfifo, 64, 16);
 MYFIFO_INIT(blt_txfifo, 40, 32);
+extern u8 baud_buf[1];
 
+u8 scanrsp_advData[12] = {
+	 0x0B, 0x09, 'B','A','T','S','I','G','M','E','S','H'
+};
 
 
 // u8		peer_type;
@@ -271,55 +277,82 @@ int app_event_handler (u32 h, u8 *p, int n)
 	return 0;
 }
 
+void user_gpio_init()
+{
+	gpio_set_func(BTN_GPIO, AS_GPIO);
+	gpio_set_output_en(BTN_GPIO, 0);
+	gpio_set_input_en(BTN_GPIO, 1);
+
+	#if (SWITCH_ENABLE_1) //按键高电平有�?
+	gpio_setup_up_down_resistor(BTN_GPIO, PM_PIN_PULLDOWN_100K);
+	#else //按键低电平有�?
+	gpio_setup_up_down_resistor(BTN_GPIO, PM_PIN_PULLUP_10K);
+	#endif
+
+	gpio_set_func(GPIO_LED, AS_GPIO);
+	gpio_set_output_en(GPIO_LED, 1);
+	gpio_set_input_en(GPIO_LED, 0);
+}
+
+#define LONG_PRESS_TIME (FACTORY_RESTORE * 20)
 void proc_ui()
 {
-	static u32 tick, scan_io_interval_us = 40000;
-	if (!clock_time_exceed (tick, scan_io_interval_us))
+	static u32 tick, scan_io_interval_us = 50000, press_time = 0;
+	if (!clock_time_exceed (tick, scan_io_interval_us)) //�?0ms进入一次处�?
 	{
 		return;
 	}
+
 	tick = clock_time();
 
-	#if 0
-	static u8 st_sw1_last,st_sw2_last;	
-	u8 st_sw1 = !gpio_read(SW1_GPIO);
-	u8 st_sw2 = !gpio_read(SW2_GPIO);
+	static u8 st_sw2_last = SWITCH_ENABLE_1?0:1;	
+
+	u8 st_sw2 = gpio_read(BTN_GPIO); //如果为低电平返回零，如果为高电平返回非零
+
+	if(st_sw2 > 0) st_sw2 = 1; //将非零值转换为1
 	
-	if(!(st_sw1_last)&&st_sw1){
-	    scan_io_interval_us = 100*1000; // fix dithering
-	    access_cmd_onoff(0xffff, 0, G_ON, CMD_NO_ACK, 0);
-		foreach(i,NET_KEY_MAX){
-					mesh_key.net_key[i][0].node_identity =1;
+	if((st_sw2_last == SWITCH_ENABLE_1)&&(st_sw2 != SWITCH_ENABLE_1))
+	{
+		if(press_time < 20)
+		{
+			u8 present_status = light_g_onoff_present_get(0);
+
+			u8 buf[sizeof(u16) + sizeof(mesh_cmd_g_onoff_set_t)];
+			buf[0] = G_ONOFF_SET & 0xFF;
+			buf[1] = (G_ONOFF_SET >> 8) & 0xFF;
+			mesh_cmd_g_onoff_set_t *set = (mesh_cmd_g_onoff_set_t *)&buf[2];
+			set->tid = 01;
+			set->onoff = present_status?0:1;
+			set->transit_t = 10;
+			set->delay = 10;
+			mesh_tx_cmd2self_primary(buf, sizeof(buf));
+		}
+
+		else if (press_time > LONG_PRESS_TIME)
+		{
+			my_printf_uart("factory\r\n");
+			irq_disable();
+			factory_reset();
+			show_factory_reset();
+		}
+
+		press_time = 0;
+	}
+
+	if(st_sw2 == SWITCH_ENABLE_1) //如果按键是有效电平，处于按下状�?
+	{
+		press_time ++;
+
+		if(press_time >= LONG_PRESS_TIME)
+		{
+			if(press_time%3 == 0) 
+			{
+				static int led_status = 0;
+				gpio_write(GPIO_LED, led_status=led_status?0:1);
+			}
 		}
 	}
-	st_sw1_last = st_sw1;
-	
-	if(!(st_sw2_last)&&st_sw2){
-	    scan_io_interval_us = 100*1000; // fix dithering
-	    access_cmd_onoff(0xffff, 0, G_OFF, CMD_NO_ACK, 0);
-	}
 	st_sw2_last = st_sw2;
-
-	
-	#endif
-
-	#if 0
-	static u8 st_sw2_last;	
-	u8 st_sw2 = !gpio_read(SW2_GPIO);
-	
-	if(!(st_sw2_last)&&st_sw2){ // dispatch just when you press the button 
-		//trigger the unprivison data packet 
-		static u8 beacon_data_num;
-		beacon_data_num =1;
-		mesh_provision_para_reset();
-		while(beacon_data_num--){
-			unprov_beacon_send(MESH_UNPROVISION_BEACON_WITH_URI,0);
-		}
-		prov_para.initial_pro_roles = MESH_INI_ROLE_NODE;
-	    scan_io_interval_us = 100*1000; // fix dithering
-	}
-	st_sw2_last = st_sw2;
-	#endif
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -366,7 +399,7 @@ void main_loop ()
 	static u32 tick_loop;
 
 	tick_loop ++;
-	factory_reset_cnt_check();
+	//factory_reset_cnt_check();
 #if (BLT_SOFTWARE_TIMER_ENABLE)
 	blt_soft_timer_process(MAINLOOP_ENTRY);
 #endif
@@ -407,12 +440,9 @@ void main_loop ()
 	proc_ui();
 	proc_led();
 
-	// gpio_write(GPIO_LED, 0);
-	// led_onoff_gpio(GPIO_LED, 0);
-	//light_onoff_all(0);
-
+	app_uart_loop();
+	
 	mesh_loop_process();
-
 	#if MI_API_ENABLE
 	telink_gatt_event_loop();
 	ev_main();
@@ -470,6 +500,20 @@ void test_ecdsa_sig_verify2()
 }
 #endif
 
+_attribute_data_retention_	u32 device_in_connection_state = 0;
+void ble_remote_terminate(u8 e,u8 *p, int n) //*p is terminate reason
+{
+	device_in_connection_state = 0;
+	at_print((char *)"\r\n+BLE_DISCONNECTED\r\n");
+}
+
+void ble_remote_connect(u8 e,u8 *p, int n) //*p is terminate reason
+{
+	device_in_connection_state = 1;//
+	at_print((char *)"\r\n+BLE_CONNECTED\r\n");
+	mesh_ble_connect_cb(e,p,n);
+}
+u8 baud_buf[1] = { 6 };
 
 void user_init()
 {
@@ -493,6 +537,8 @@ void user_init()
 	usb_id_init();
 	usb_log_init();
 	usb_dp_pullup_en (1);  //open USB enum
+
+	user_gpio_init();//初始化按键GPIO
 
 	////////////////// BLE stack initialization ////////////////////////////////////
 #if (DUAL_VENDOR_EN)
@@ -572,7 +618,8 @@ void user_init()
 	adc_drv_init();
 	#endif
 	rf_pa_init();
-	bls_app_registerEventCallback (BLT_EV_FLAG_CONNECT, (blt_event_callback_t)&mesh_ble_connect_cb);
+	bls_app_registerEventCallback (BLT_EV_FLAG_CONNECT, (blt_event_callback_t)&ble_remote_connect);
+	bls_app_registerEventCallback (BLT_EV_FLAG_TERMINATE, &ble_remote_terminate);
 	blc_hci_registerControllerEventHandler(app_event_handler);		//register event callback
 	//bls_hci_mod_setEventMask_cmd(0xffff);			//enable all 15 events,event list see ble_ll.h
 	bls_set_advertise_prepare (app_advertise_prepare_handler);
@@ -599,6 +646,14 @@ void user_init()
 	#endif	
 	
 	mesh_scan_rsp_init();
+
+	
+	
+	/******************����ɨ��㲥�����豸���� �������û�� mesh_scan_rsp_init();���õ����ݸ���*********************/
+	//������������Щ���ⲻ����
+	//bls_ll_setScanRspData((u8 *)&scanrsp_advData, sizeof(scanrsp_advData));
+	
+	/***************************************/
 	my_att_init (provision_mag.gatt_mode);
 	blc_att_setServerDataPendingTime_upon_ClientCmd(10);
 #if MI_API_ENABLE
@@ -644,6 +699,12 @@ void user_init()
 	blt_soft_timer_init();
 	//blt_soft_timer_add(&soft_timer_test0, 200*1000);
 #endif
+	u8 len =1;
+	
+		tinyFlash_Read(STORAGE_BAUD, baud_buf, &len); //读取波特�?
+
+	app_uart_init(baud_buf[0]);
+	at_print("        \r\nAi-Thinker AT SIG Mesh V1.0\r\nready\r\n");
 }
 
 #if (PM_DEEPSLEEP_RETENTION_ENABLE)

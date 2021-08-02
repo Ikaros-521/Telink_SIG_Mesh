@@ -3377,7 +3377,6 @@ u8 mesh_init_flag = 1;
 void mesh_init_all()
 {	
     mesh_init_flag = 1;
-	uart_simu_send_bytes("          \r\n", 12);//绗竴琛屾暟鎹�绘槸涔辩爜
     LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"System start ............",0);
 #if WIN32
 	mesh_global_var_init();	// must call first in user init() for firmware SDK.
@@ -3417,8 +3416,6 @@ void mesh_init_all()
 
 int app_event_handler_adv(u8 *p_payload, int src_type, u8 need_proxy_and_trans_par_val)
 {
-	//LOG_MSG_INFO(TL_LOG_MESH, p_payload, sizeof(p_payload),"[app_event_handler_adv]:%s\r\n",0);
-
 	int err = 0;
 	#if (MESH_MONITOR_EN)
 	if(need_proxy_and_trans_par_val){
@@ -3429,15 +3426,18 @@ int app_event_handler_adv(u8 *p_payload, int src_type, u8 need_proxy_and_trans_p
 	
 	mesh_cmd_bear_unseg_t *p_br = GET_BEAR_FROM_ADV_PAYLOAD(p_payload);
 	u8 adv_type = p_br->type;
+
 	if(adv_type == MESH_ADV_TYPE_MESSAGE){
+	//	LOG_MSG_INFO(TL_LOG_PROXY,0,0,"app_event_handler_adv adv_type:%02x,",adv_type);
         lpn_debug_set_event_handle_pin(1);
-		err = mesh_rc_data_layer_network(p_payload, src_type, need_proxy_and_trans_par_val);
+		err = mesh_rc_data_layer_network(p_payload, src_type, need_proxy_and_trans_par_val);//app发送给别的节点的数据也会经过这个函数，猜测这个函数里有对节点地址的判断，不是本地址的会转发出去
         lpn_debug_set_event_handle_pin(0);
         if(is_lpn_support_and_en){
             suspend_quick_check();    // rx handle ok
         }
 	}
 	else if((adv_type == MESH_ADV_TYPE_BEACON)&&(p_br->beacon.type == SECURE_BEACON)){
+	//	LOG_MSG_INFO(TL_LOG_PROXY,0,0,"app_event_handler_adv adv_type:%02x,",adv_type);
 		mesh_rc_data_beacon_sec(p_payload, 0);
 	}
 	else if((adv_type == MESH_ADV_TYPE_PRO)
@@ -3482,10 +3482,12 @@ void mesh_nw_pdu_from_gatt_handle(u8 *p_bear)	// adv from app or VC to 8269 prox
 {
 	#if DEBUG_MESH_DONGLE_IN_VC_EN
 	if(FEATURE_PROXY_EN && (BLS_LINK_STATE_CONN == blt_state)){
+		 LOG_MSG_INFO(TL_LOG_PROXY,0,0,"debug_mesh_dongle_adv_bear2usb",0);
 		debug_mesh_dongle_adv_bear2usb(p_bear);
 	}
 	#else
 	if(is_proxy_support_and_en){
+		 LOG_MSG_INFO(TL_LOG_PROXY,0,0,"mesh_gatt_bear_handle",0);
 		mesh_gatt_bear_handle(p_bear);
 	}
 	#endif
@@ -3493,12 +3495,14 @@ void mesh_nw_pdu_from_gatt_handle(u8 *p_bear)	// adv from app or VC to 8269 prox
 
 int mesh_adv_cmd_set(u8 *p_adv, u8 *p_bear)
 {
+	
     mesh_cmd_bear_unseg_t *p_br = (mesh_cmd_bear_unseg_t *)p_bear;
     u8 len_payload = p_br->len + 1;
     if(len_payload > 31){
         return 0;
     }
     
+	//sLOG_MSG_LIB(TL_LOG_NODE_SDK,&p_br->len, len_payload,"mesh_adv_cmd_set:\r\n",0);
     rf_packet_adv_t *p = (rf_packet_adv_t *)p_adv;
     
     p->header.type = LL_TYPE_ADV_NONCONN_IND;  
