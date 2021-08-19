@@ -30,6 +30,7 @@
 #include "mesh/generic_model.h"
 #include "mesh/scene.h"
 #include "light.h"
+
 #if HOMEKIT_EN
 #include "mesh/led_cfg.h"
 #endif
@@ -937,6 +938,7 @@ u8 light_ct_lum_get(int idx, int target_flag)
 
 //------set function
 #if 1
+// 开关灯动作
 int light_onoff_idx(int idx, int on, int init_time_flag){
     if(idx < LIGHT_CNT){
     	int st_trans_type = ST_TRANS_LIGHTNESS;
@@ -1252,6 +1254,7 @@ void proc_led()
 }
 #else
 
+// led 指示灯事件轮询处理函数
 void proc_led(void)
 {
 	if(p_vendor_proc_led){

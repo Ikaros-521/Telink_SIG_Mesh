@@ -301,7 +301,7 @@ static unsigned char atCmd_Send2Ali(char *pbuf,  int mode, int lenth)
 
 extern const u8 USER_DEFINE_ATT_HANDLE ;
 extern u32 device_in_connection_state;//连接状�?
-//AT+SEND2APP=5,12345
+//AT+SEND2APP=5,12345 发送数据到手机
 static unsigned char atCmd_Send2App(char *pbuf,  int mode, int lenth)
 {
 	if(device_in_connection_state == 0) return 2;

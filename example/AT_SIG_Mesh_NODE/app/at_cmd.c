@@ -105,6 +105,8 @@ void at_data_process(char *pbuf, int len)
 
     mode = data_process_cmd_mode(pbuf);
 
+    //at_print(pbuf);
+
     if((strxcmp("AT",pbuf) != 0) && (strxcmp("ATE",pbuf) != 0))
     {
         at_response_result(1);

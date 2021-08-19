@@ -196,12 +196,12 @@ extern "C" {
 #define XIAOMI_MODULE_ENABLE	MI_API_ENABLE
 #define XIAOMI_TEST_CODE_ENABLE 	0
 
+// GPIO_PC3是大的白色的LED提示灯
 #define GPIO_LED	GPIO_PC3
 
 #define BTN_GPIO GPIO_PD2 //按键GPIO
 #define FACTORY_RESTORE  3 //长按恢复出厂设置时间
 #define SWITCH_ENABLE_1 0 //按键优先电平
-
 
 //---------------  LED / PWM
 #define PWM_R       GPIO_PC3		//red

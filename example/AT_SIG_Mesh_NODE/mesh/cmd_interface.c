@@ -39,12 +39,14 @@
 #include "cmd_interface.h"
  
 //-----------access command--------
+// 获取 element 的 level 值
 int access_cmd_get_level(u16 adr,u32 rsp_max)
 {
 	u8 par[1];
 	return SendOpParaDebug(adr, rsp_max, G_LEVEL_GET, par, 0);
 }
 
+// 设置 element 的 level 值
 int access_cmd_set_level(u16 adr, u8 rsp_max, s16 level, int ack, transition_par_t *trs_par)
 {
 	mesh_cmd_g_level_set_t par = {0};
@@ -74,6 +76,7 @@ int access_cmd_set_delta(u16 adr, u8 rsp_max, s32 level, int ack, transition_par
 }
 
 #if 1
+// 设置 element 的 onoff 值
 int access_cmd_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack, transition_par_t *trs_par)
 {
 	mesh_cmd_g_onoff_set_t par = {0};

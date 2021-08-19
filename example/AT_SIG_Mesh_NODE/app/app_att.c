@@ -259,6 +259,7 @@ const u8  my_userdefine_UUID[16]= TELINK_USERDEFINE_UUID;
 static u8 my_userdefine_DataCCC[2]  				= {0};
 
 char buff[64] = {0};
+// 蓝牙连接后，收到手机发来的数据
 int set_ccc_diaptch(void *p)
 {
 	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
@@ -271,6 +272,27 @@ int set_ccc_diaptch(void *p)
 	at_print(buff);
 	at_send((char*)pw->dat, len);
 	at_print("\r\n");
+
+	// 我加的
+	if(strncmp((char *)pw->dat , "0", len) == 0)
+	{
+		gpio_write(GPIO_PC3, 0);
+		//gpio_write(GPIO_PB6, 0);
+		at_print("gpio_write 0\r\n");
+	}	
+	else if(strncmp((char *)pw->dat , "1", len) == 0)
+	{
+		gpio_write(GPIO_PC3, 1);
+		//gpio_write(GPIO_PB6, 1);
+		at_print("gpio_write 1\r\n");
+	}
+	// else
+	// {
+	// 	char temp[50] = {0};
+	// 	u_sprintf(temp, "temp=%d\r\n", strncmp((char *)pw->dat , "1", len));
+	// 	at_print(temp);
+	// }
+
 	return 1;
 }
 #endif
@@ -285,6 +307,7 @@ int proxy_out_ccc_cb(void *p)
 	return 1;	
 }
 
+// 处理 proxy 命令的回调函数
 int proxy_gatt_Write(void *p)
 {
 	if(proxy_In_ccc[0]==0 && proxy_In_ccc[1]==0){
@@ -294,7 +317,7 @@ int proxy_gatt_Write(void *p)
 	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
 	pb_gatt_proxy_str *p_gatt = (pb_gatt_proxy_str *)(pw->dat);
 	mesh_cmd_bear_unseg_t *p_bear = (mesh_cmd_bear_unseg_t *)para_pro;
-	 LOG_MSG_ERR(TL_LOG_PROXY,0, 0 ,"proxy_gatt_Write,p_gatt->msgType��%02x",p_gatt->msgType);
+	 LOG_MSG_ERR(TL_LOG_PROXY,0, 0 ,"proxy_gatt_Write,p_gatt->msgType��%02x",p_gatt->msgType);
 	if(p_gatt->msgType == MSG_PROXY_CONFIG ){
 		if(!pkt_pb_gatt_data(pw,L2CAP_PROXY_TYPE,(u8 *)&p_bear->nw,&para_len)){
 			return 0;

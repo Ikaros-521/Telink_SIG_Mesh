@@ -2245,6 +2245,7 @@ u8 get_provision_state()
 	}
 }
 
+// 获取节点是否处于配网成功状态。
 u8 is_provision_success()   // rename is_proved_state(), proved means "prov + ed"
 {
     #if WIN32
@@ -2254,6 +2255,7 @@ u8 is_provision_success()   // rename is_proved_state(), proved means "prov + ed
     #endif
 }
 
+// 获取节点是否处于正在配网过程
 u8 is_provision_working()
 {
     #if WIN32

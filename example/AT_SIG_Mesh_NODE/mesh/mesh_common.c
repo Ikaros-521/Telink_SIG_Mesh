@@ -481,6 +481,7 @@ _attribute_ram_code_ u8 user_adv_filter_proc(rf_packet_adv_t * p_adv)
 }
 #endif
 
+// 接收和过滤可连接广播包 函数返回 0 表示丢弃 收到的广播包，返回 1 表示不过滤(接收并压入 blt_rxfifo)。
 _attribute_ram_code_ u8 adv_filter_proc(u8 *raw_pkt ,u8 blt_sts)
 {
 #define BLE_RCV_FIFO_MAX_CNT 	6
@@ -1007,6 +1008,7 @@ void mesh_ota_reboot_proc()
 }
 
 //----------------------- ble connect callback --------------------------------------------
+// GATT connect 成功之后，会回调此函数
 void mesh_ble_connect_cb(u8 e, u8 *p, int n)
 {
 	#if MESH_RX_TEST
@@ -1028,6 +1030,7 @@ void mesh_ble_connect_cb(u8 e, u8 *p, int n)
 #endif
 }
 
+// GATT disconnect 之后，会回调此函数
 void mesh_ble_disconnect_cb()
 {
 	app_adr = 0;
@@ -1637,7 +1640,8 @@ void mesh_global_var_init()
 	model_sig_cfg_s.sec_nw_beacon = SEC_NW_BC_BROADCAST_DEFAULT; // (NODE_CAN_SEND_ADV_FLAG) ? SEC_NW_BC_BROADCAST_DEFAULT : NW_BEACON_NOT_BROADCASTING;
 #endif
 	model_sig_cfg_s.ttl_def = TTL_DEFAULT;
-	
+
+// 配置 mesh SDK 的默认 feature	
 #if DEBUG_PROXY_FRIEND_SHIP
 	#if WIN32
 	model_sig_cfg_s.frid = FEATURE_FRIEND_EN ? FRIEND_SUPPORT_ENABLE : FRIEND_NOT_SUPPORT;
@@ -1797,6 +1801,7 @@ void set_material_tx_cmd(material_tx_cmd_t *p_mat, u16 op, u8 *par, u32 par_len,
 	}
 }
 
+// 通用的发送命令的函数 返回值返回 0 表示命令执行成功
 int mesh_tx_cmd(material_tx_cmd_t *p)
 {
 	if(mesh_adr_check(p->adr_src, p->adr_dst)){

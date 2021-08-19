@@ -50,6 +50,8 @@
 #include "tinyFlash.h"
 #include "tinyFlash_Index.h"
 
+#include "app_config_8258.h"
+
 #if MI_API_ENABLE
 #include "mesh/mi_api/telink_sdk_mible_api.h"
 #include "mesh/mi_api/certi/mijia_profiles/mi_service_server.h"
@@ -154,6 +156,7 @@ u8 find_mac_in_filter_list(u8 *p_mac)
 
 
 //----------------------- handle BLE event ---------------------------------------------
+// 回调处理函数:当 BLE stack 收到:adv (包含可连接广告包，beacon 包等)、connect request包、BLE 连接参数更新包、BLE 连接断开，等，事件后会回调该函数进行处理。
 int app_event_handler (u32 h, u8 *p, int n)
 {
 	static u32 event_cb_num;
@@ -171,6 +174,11 @@ int app_event_handler (u32 h, u8 *p, int n)
 		{
 			event_adv_report_t *pa = (event_adv_report_t *)p;
 			if(LL_TYPE_ADV_NONCONN_IND != (pa->event_type & 0x0F)){
+
+				// 我加的
+				at_print("app_event_handler(u32 h, u8 *p, int n)'s p:");
+				at_print(p);
+
 				return 0;
 			}
 			#if TEST_FORWARD_ADDR_FILTER_EN
@@ -432,16 +440,19 @@ void main_loop ()
 	#endif	
 	#endif
 	////////////////////////////////////// BLE entry /////////////////////////////////
+	// BLE 协议栈的 main_loop 函数
 	blt_sdk_main_loop ();
 
 
 	////////////////////////////////////// UI entry /////////////////////////////////
 	//  add spp UI task:
 	proc_ui();
+	// led 指示灯事件处理函数
 	proc_led();
 
 	app_uart_loop();
 	
+	// SIG mesh 相关的 loop 函数，包括 reliable 命令的 retry机制、segment ack 超时回复、TID 超时检测机制等
 	mesh_loop_process();
 	#if MI_API_ENABLE
 	telink_gatt_event_loop();
@@ -622,6 +633,7 @@ void user_init()
 	bls_app_registerEventCallback (BLT_EV_FLAG_TERMINATE, &ble_remote_terminate);
 	blc_hci_registerControllerEventHandler(app_event_handler);		//register event callback
 	//bls_hci_mod_setEventMask_cmd(0xffff);			//enable all 15 events,event list see ble_ll.h
+	// 注册广播包发送回调函数
 	bls_set_advertise_prepare (app_advertise_prepare_handler);
 	//bls_set_update_chn_cb(chn_conn_update_dispatch);
 	

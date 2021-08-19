@@ -58,6 +58,7 @@ extern "C" {
 #define NODE_CAN_SEND_ADV_FLAG			1		// must 1
 #define DEBUG_SHOW_VC_SELF_EN			0		// must 0
 #define VC_CHECK_NEXT_SEGMENT_EN		0		// must 0
+// 开关 vendor model 的 debug 命令
 #define DEBUG_VENDOR_CMD_EN 		    1
 #define VC_SUPPORT_ANY_VENDOR_CMD_EN	0		// should be 0
 #endif
@@ -82,6 +83,7 @@ extern "C" {
 #define 	__PROJECT_MESH_PRO__	 1
 #define FAST_PROVISION_ENABLE		 1
 #else
+// Fast provision 是私有模式，可对多节点同时进行组网，执行快速批量以及支持 relay 组网。
 #define FAST_PROVISION_ENABLE		 0
 #endif
 
@@ -127,6 +129,7 @@ extern "C" {
 #elif __PROJECT_SPIRIT_LPN__
 #define MESH_USER_DEFINE_MODE 	MESH_SPIRIT_ENABLE // must spirit ali
 #else
+// 定义 provision 时的认证模式，MESH_NORMAL_MODE 为 no OOB 模式，其他为 static OOB模式
 #define MESH_USER_DEFINE_MODE 	MESH_NORMAL_MODE
 #endif
 
@@ -190,8 +193,10 @@ extern "C" {
 #define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_CT_LIGHT	
 	#endif
 #elif(MESH_USER_DEFINE_MODE == MESH_NORMAL_MODE || MESH_USER_DEFINE_MODE == MESH_AES_ENABLE )
+// 私有模式。目的是在收到对 onoff model 设定组号的命令后，固件端自动对sub_share_model_sig[]和 sub_share_model_vendor[]里面列出来的 model 也添加该组号
 #define SUBSCRIPTION_SHARE_EN		0
 #define AIS_ENABLE					0
+// 和标准组网流程一样，也是依次对每个节点进行配网，即同一时间只有一个节点在配网。只 是在 node 收到 app key add 后，自动对每一个 model 都执行 key bind 的动作。Provisioner端不再需要发送 key bind 命令。简化组网流程，减少组网时间。
 #define PROVISION_FLOW_SIMPLE_EN    1
 #elif(MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
 #define SUBSCRIPTION_SHARE_EN		0
@@ -266,17 +271,20 @@ extern "C" {
 #define LIGHT_TYPE_SEL				LIGHT_TYPE_PANEL
 		#endif
 	#else
+// 选择灯的类型，目前几种类型的灯是互斥的关系
 #define LIGHT_TYPE_SEL				LIGHT_TYPE_CT_HSL	// 
 	#endif
 #endif
 
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_CT) || (LIGHT_TYPE_SEL == LIGHT_TYPE_CT_HSL)
+// 色温灯相关 model 的开关，包含 Light CTL Server，Light CTL Setup Server，Light CTL Temperature Server，Light CTL Client
 #define LIGHT_TYPE_CT_EN            1
 #else
 #define LIGHT_TYPE_CT_EN            0
 #endif
 
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_HSL) || (LIGHT_TYPE_SEL == LIGHT_TYPE_CT_HSL)
+// 彩色灯(HSL) 相关 model 的开关，包含 Light HSL Server，Light HSL Hue Server，Light HSL Saturation Server，Light HSL Setup Server，Light HSL Client
 #define LIGHT_TYPE_HSL_EN           1
 #else
 #define LIGHT_TYPE_HSL_EN           0
@@ -286,6 +294,7 @@ extern "C" {
     #if((WIN32) || (TESTCASE_FLAG_ENABLE))
 #define MD_LIGHT_CONTROL_EN			1	// must 1
     #else
+// Lighting Control 相关 model 的开关，默认关闭。包含 Light LC Server，Light LC Setup Server，Light LC Client。
 #define MD_LIGHT_CONTROL_EN			0
     #endif
 #else
@@ -299,7 +308,9 @@ extern "C" {
 #define MD_LIGHTNESS_EN             0
 #define MD_LEVEL_EN                 1
 #else
+// Lightness 相关model的开关，包含Light Lightness Server，Light Lightness Setup Server，Light Lightness Client。
 #define MD_LIGHTNESS_EN             1
+// Level 相关 model 的开关。每一个状态量都可以对应有一个 level model。
 #define MD_LEVEL_EN                 1   // must 1
 #endif
 
@@ -323,6 +334,7 @@ extern "C" {
 #define MD_MESH_OTA_EN				1	// enable for genius
         #endif
 	#else
+// Mesh OTA 相关 model 的开关，默认关闭
 #define MD_MESH_OTA_EN				1 // dufault disable before released by SIG.
 	#endif
 #endif
@@ -333,6 +345,7 @@ extern "C" {
 #define DISTRIBUTOR_UPDATE_CLIENT_EN    0
 #endif
 
+// Generic OnOff 相关 model 的开关，默认开启
 #define MD_ONOFF_EN                 1   // must 1
 #define SENSOR_LIGHTING_CTRL_EN     0
 
@@ -540,6 +553,7 @@ extern "C" {
 #define FEATURE_RELAY_EN		0
 #define FEATURE_PROXY_EN 		0
 #else
+// 设置是否支持 Friend feature
 #define FEATURE_FRIEND_EN 		1
 #define FEATURE_LOWPOWER_EN		0
 #define FEATURE_PROV_EN 		1
@@ -555,6 +569,7 @@ extern "C" {
 #if (FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN)
 #define MAX_LPN_NUM					1   // must 1
 #else
+// 设置一个 friend 节点最大能支持几个 low power 节点
 #define MAX_LPN_NUM					2   // should be less than or equal to 16
 #define FN_PRIVATE_SEG_CACHE_EN     0   // not push all segments to friend cache at the same time
 #endif
@@ -576,6 +591,7 @@ extern "C" {
 #elif (DEBUG_MESH_DONGLE_IN_VC_EN && (!IS_VC_PROJECT))
 #define SEND_STATUS_WHEN_POWER_ON			0
 #else
+// 设置上电时是否发亮度状态 message，默认发送地址是 0xffff
 #define SEND_STATUS_WHEN_POWER_ON			1
 #endif
 
