@@ -21,13 +21,19 @@
 #include "mesh/mesh_property.h"
 #include "mesh/generic_model.h"
 
+// 我加的
+#include "proj_lib/ble/service/ble_ll_ota.h"
+#include "mesh/app_provison.h"
+#include "mesh/app_proxy.h"
+#include "mesh/app_beacon.h"
+
 #define DATA_JSON "\r\n{\"mesh_data\":\r\n{\"daddr\":%02X%02X,\"saddr\":%02X%02X,\"opcode\":%02X%02X,\"data_len\":%d,\"data\":"
 //接收到Mesh数据
 int mesh_cmd_at_data(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     char buf[200] = {0};
 
-    if((cb_par->adr_src == ele_adr_primary) && (cb_par->op != 0x0282)) //如果原地址是自�?且不是开关操作，直接返回
+    if((cb_par->adr_src == ele_adr_primary) && (cb_par->op != 0x0282)) //如果原地址是自�?且不是开关操作，直接返回
     {
     	at_print("b_par->adr_src == ele_adr_primary");
         return 0;
@@ -43,6 +49,24 @@ int mesh_cmd_at_data(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     at_print(buf);
     at_print_hexstr((char*)par,par_len);
     at_print("}}\r\n");
+
+    if(par[0] == 0)
+    {
+        gpio_write(GPIO_LED, 0);
+		//gpio_write(GPIO_PB6, 0);
+		at_print("gpio_write(GPIO_LED, 0)\r\n");
+    }
+    else if(par[0] == 1)
+    {
+        gpio_write(GPIO_LED, 1);
+		//gpio_write(GPIO_PB6, 1);
+		at_print("gpio_write(GPIO_LED, 1)\r\n");
+    }
+    else
+    {
+
+    }
+
     return 0;
 }
 
