@@ -27,6 +27,8 @@
 #include "proj_lib/ble/blt_config.h"
 #include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
+#include "tinyFlash.h"
+#include "tinyFlash_Index.h"
 
 extern void user_init();
 extern void main_loop ();
@@ -148,6 +150,7 @@ _attribute_ram_code_ void irq_handler(void)
 #if	IRQ_GPIO_ENABLE
 	irq_gpio_handle();
 #endif
+	app_uart_irq_proc();
 }
 
 FLASH_ADDRESS_DEFINE;
@@ -209,6 +212,15 @@ _attribute_ram_code_ int main (void)    //must run in ramcode
 	clock_init(SYS_CLK_48M_Crystal);
 #endif
 
+
+
+tinyFlash_Init(0x7A000,0x4000); //��ʼ��KV�洢ϵͳ
+
+if(!deepRetWakeUp )
+{
+	
+
+}
 
 #if	(PM_DEEPSLEEP_RETENTION_ENABLE)
 		if( pm_is_MCU_deepRetentionWakeup() ){

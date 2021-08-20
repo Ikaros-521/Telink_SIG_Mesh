@@ -21,6 +21,7 @@ void at_response_result(unsigned char result_code)
     }
 }
 
+// 数据处理命令模式
 static int data_process_cmd_mode(char *pbuf)
 {
     char *s = NULL;
@@ -105,11 +106,18 @@ void at_data_process(char *pbuf, int len)
 
     mode = data_process_cmd_mode(pbuf);
 
+    // 我加的
+    // char temp[20] = {0};
+    // u_sprintf(temp, "mode=%d\r\n", mode);
+    // at_print(temp);
+
     //at_print(pbuf);
 
+    // 不存在AT或ATE
     if((strxcmp("AT",pbuf) != 0) && (strxcmp("ATE",pbuf) != 0))
     {
         at_response_result(1);
+        at_print("don't exist AT or ATE\r\n");
         return;
     }
 

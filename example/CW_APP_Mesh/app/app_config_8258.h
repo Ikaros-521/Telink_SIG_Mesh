@@ -88,7 +88,7 @@ extern "C" {
 
 #define HCI_LOG_FW_EN   1
 #if HCI_LOG_FW_EN
-#define DEBUG_INFO_TX_PIN           		GPIO_PB1
+#define DEBUG_INFO_TX_PIN           		GPIO_PB6
 #define PRINT_DEBUG_INFO                    1
 #endif
 
@@ -98,7 +98,7 @@ extern "C" {
 #define ADC_CHNM_REF_SRC 		RV_1P428
 #endif
 
-#define ONLINE_STATUS_EN        0
+#define ONLINE_STATUS_EN        1
 
 #if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
 #define DUAL_MODE_ADAPT_EN 			1   // dual mode as master with Zigbee
@@ -196,6 +196,11 @@ extern "C" {
 #define XIAOMI_MODULE_ENABLE	MI_API_ENABLE
 #define XIAOMI_TEST_CODE_ENABLE 	0
 
+#define GPIO_LED	PWM_R
+
+#define BTN_GPIO GPIO_PD3 //按键GPIO
+#define FACTORY_RESTORE  3 //长按恢复出厂设置时间
+#define SWITCH_ENABLE_1 0 //按键优先电平
 //---------------  LED / PWM
 #define PWM_R       GPIO_PB4		//red
 #define PWM_G       GPIO_PB5		//green
@@ -218,7 +223,7 @@ extern "C" {
 #define PWM_INV_B   (GET_PWM_INVERT_VAL(PWM_B, PWM_FUNC_B))
 #define PWM_INV_W   (GET_PWM_INVERT_VAL(PWM_W, PWM_FUNC_W))
 
-#define GPIO_LED	PWM_R
+
 
 
 /////////////open SWS digital pullup to prevent MCU err, this is must ////////////
@@ -249,6 +254,7 @@ extern "C" {
 #endif
 
 
+#define VENDOR_ID  0x8888
 
 /////////////////// set default   ////////////////
 

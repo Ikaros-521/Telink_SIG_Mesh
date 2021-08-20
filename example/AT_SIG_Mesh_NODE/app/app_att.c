@@ -28,6 +28,9 @@
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "mesh/app_beacon.h"
 
+#include "proj/common/tstring.h"
+#include "mesh/mesh_config.h"
+
 #if(1)
 
 typedef struct

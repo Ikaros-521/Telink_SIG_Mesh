@@ -259,6 +259,10 @@ static unsigned char atCmd_State(char *pbuf,  int mode, int lenth)
 //AT+SEND2ALI=8421,12345678
 static unsigned char atCmd_Send2Ali(char *pbuf,  int mode, int lenth)
 {
+	// char temp[40] = {0};
+	// u_sprintf(temp, "ele_adr_primary:%d\r\n", ele_adr_primary);
+	// at_print(temp);
+
 	char * tmp = strstr(pbuf,",");
     if(tmp == NULL)
     {
@@ -530,6 +534,8 @@ static unsigned char atCmd_mac(char *pbuf,  int mode, int lenth)
 		at_print("not suppor set\r\n");
 		return -2;
 	}
+
+	return -2;
 }
 
 static unsigned char atCmd_appkey(char *pbuf,  int mode, int lenth)
@@ -569,7 +575,7 @@ static unsigned char atCmd_nwkey(char *pbuf,  int mode, int lenth)
 
 _at_command_t gAtCmdTb_writeRead[] =
 { 
-//	{ "SEND2ALI", 	atCmd_Send2Ali,		"Send data to Tmall \r\n"},	
+	{ "SEND2ALI", 	atCmd_Send2Ali,		"Send data to Tmall \r\n"},	
 	{ "SEND2APP", 	atCmd_Send2App,	"Send data to phone\r\n"},
 	{ "BAUD", 	atCmd_Baud,	"Set/Read BT Baud\r\n"},
 	{ "AliGenie", atCmd_AliGenie, "Set/Read three info\r\n"},

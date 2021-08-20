@@ -139,6 +139,30 @@ int strcmp(const char* firstString, const char* secondString) {
 	return 1;
 }
 
+int strncmp(const char *_s1, const char *_s2, unsigned int _n) {
+	unsigned int temp = 0;
+	while (1) {
+		if (_n == temp) {
+			return 0;
+		}
+
+		if(*_s1 == *_s2)
+		{
+			++_s1;
+			++_s2;
+			++temp;
+		}
+		else
+		{
+			break;
+		}
+	}
+	if (((unsigned char) *_s1 - (unsigned char) *_s2) < 0) {
+		return -1;
+	}
+	return 1;
+}
+
 int strxcmp(const char* firstString, const char* secondString) {
 	while (*firstString == *secondString) {
 		if (*firstString == '\0') {
@@ -181,7 +205,7 @@ char *	strstr(const char *s1, const char *s2)
  if (*s2){
   while(*s1){
     for (n=0;*(s1+n)==*(s2+n);n++){
-	    if (!*(s2+n+1)){            //²éÕÒµÄÏÂÒ»¸ö×Ö·ûÊÇ·ñÎª'\0'
+	    if (!*(s2+n+1)){            //ï¿½ï¿½ï¿½Òµï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ç·ï¿½Îª'\0'
 	     return (char*)s1;
 	    }
     }
